@@ -171,7 +171,7 @@ module.exports = {
       'before': false,
       'after': true
     }],
-    'space-before-blocks': [2, 'always'],
+    'space-before-blocks': [2, 'never'],
     'space-before-function-paren': [2, 'never'],
     'space-in-parens': [2, 'never'],
     'space-infix-ops': 2,

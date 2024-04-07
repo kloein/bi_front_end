@@ -46,13 +46,81 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
-    children: [{
-      path: 'dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
-    }]
+    redirect: '/dataSource',
+  },
+
+  {
+    path: '/dataSource',
+    component: Layout,
+    redirect: '/dataSource/dataSourceQuery/',
+    meta: { title: '数据源管理', icon: 'el-icon-s-promotion' },
+    children: [
+      {
+        path: 'dataSourceQuery',
+        name: 'dataSourceQuery',
+        component: () => import('@/views/data_source/query'),
+        meta: { title: '数据源查询', icon: 'el-icon-search' }
+      },
+      {
+        path: 'dataSourceCreate',
+        name: 'dataSourceCreate',
+        component: () => import('@/views/data_source/create'),
+        meta: { title: '新建数据源', icon: 'el-icon-magic-stick' }
+      },
+      {
+        path: 'dataSourceUpdate',
+        name: 'dataSourceUpdate',
+        component: () => import('@/views/data_source/update'),
+      }
+    ]
+  },
+
+  {
+    path: '/dataSet',
+    component: Layout,
+    redirect: '/dataSet/dataSetQuery/',
+    meta: { title: '数据集管理', icon: 'el-icon-s-data' },
+    children: [
+      {
+        path: 'dataSetQuery',
+        name: 'dataSetQuery',
+        component: () => import('@/views/data_set/query'),
+        meta: { title: '数据集查询', icon: 'el-icon-search' }
+      },
+      {
+        path: 'queryDataSetColumn',
+        name: 'queryDataSetColumn',
+        component: () => import('@/views/data_set/column_detail'),
+        //meta: { title: '字段详情', icon: 'el-icon-magic-stick' }
+      },
+      {
+        path: 'preview',
+        name: 'preview',
+        component: () => import('@/views/data_set/preview'),
+        //meta: { title: '字段详情', icon: 'el-icon-magic-stick' }
+      }
+    ]
+  },
+
+  {
+    path: '/dashboards',
+    component: Layout,
+    redirect: '/dashboards/dashboardQuery/',
+    meta: { title: '仪表盘管理', icon: 'el-icon-s-promotion' },
+    children: [
+      {
+        path: 'dashboardQuery',
+        name: 'dashboardQuery',
+        component: () => import('@/views/dashboard/query'),
+        meta: { title: '仪表盘查询', icon: 'el-icon-search' }
+      },
+      {
+        path: 'dashboardDetail',
+        name: 'dashboardDetail',
+        component: () => import('@/views/dashboard/detail'),
+        meta: { title: '仪表盘查询', icon: 'el-icon-search' }
+      }
+    ]
   },
 
   {
