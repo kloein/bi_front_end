@@ -68,7 +68,7 @@
                         </el-dropdown-item>
                         <el-dropdown-item>
                           <el-button @click="handleDimensionShow(scope.row.dimensionID)">
-                            加入仪表
+                            加入图表
                           </el-button>
                         </el-dropdown-item>
                       </el-dropdown-menu>
@@ -165,7 +165,7 @@
                             </el-dropdown-item>
                             <el-dropdown-item>
                               <el-button @click="handleIndexShow(scope.row.indexID)">
-                                加入仪表
+                                加入图表
                               </el-button>
                             </el-dropdown-item>
                           </el-dropdown-menu>

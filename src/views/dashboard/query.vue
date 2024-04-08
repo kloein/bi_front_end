@@ -43,14 +43,14 @@
       </el-col>
 
         <el-col :span="4" :offset="0"> 
-          <el-input v-model="dashboardName" placeholder="输入仪表盘名称" style="width: 100;"></el-input>
+          <el-input v-model="dashboardName" placeholder="输入图表名称" style="width: 100;"></el-input>
         </el-col>
         <el-col :span="2" > 
           <el-button type="primary" @click= "handleQuery">查询</el-button>
         </el-col>
 
         <el-col :span="2" :offset="5"> 
-          <el-button type="primary" @click= "createDashboardDialogVisible = true">创建仪表</el-button>
+          <el-button type="primary" @click= "createDashboardDialogVisible = true">创建图表</el-button>
         </el-col>
     </el-row>
   <el-container>
@@ -72,7 +72,7 @@
           {{ scope.row.dataSetName }}
         </template>
       </el-table-column>
-      <el-table-column label="仪表盘名称"  width="100" align="center">
+      <el-table-column label="图表名称"  width="100" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.dashBoardName }}</span>
         </template>
@@ -98,7 +98,7 @@
           {{ scope.row.comment }}
         </template>
       </el-table-column>
-      <el-table-column label="仪表详情"  width="100" align="center">
+      <el-table-column label="图表详情"  width="100" align="center">
         <template slot-scope="scope">
           <el-button  @click="handleJumpToDashboard(scope.row)">详情</el-button>
         </template>
@@ -111,7 +111,7 @@
         width="30%"
         >
         <el-form :model="createDashboardForm">                             
-          <el-form-item label="仪表名称">
+          <el-form-item label="图表名称">
             <el-input v-model="createDashboardForm.dashboardName" autocomplete="off"></el-input>
           </el-form-item>
           <el-form-item label="数据源">
@@ -292,7 +292,7 @@ export default {
     },
     handleCreateDashboard(){
       this.$message({
-                message: '仪表创建中',
+                message: '图表创建中',
                 type: 'success'
             })
       create(this.createDashboardForm.dashboardName,this.dataSourceID,this.dataSetID,this.createDashboardForm.comment).then(response =>{
@@ -316,7 +316,7 @@ export default {
             this.$router.replace(url)
           }else{
             this.$message({
-                message: '仪表创建失败',
+                message: '图表创建失败',
                 type: 'warning'
               })
           }
