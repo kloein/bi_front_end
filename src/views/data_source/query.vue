@@ -103,11 +103,11 @@ export default {
       })
     },
     handleQuery(){
-       this.queryData(this.dataSourceName, this.pageNo, this.pageSize)
+       this.queryData(this.dataSourceName,"", this.pageNo, this.pageSize)
     },
     handleCurrentChange(val){
        this.pageNo=val
-       this.queryData(this.dataSourceName, this.pageNo, this.pageSize)
+       this.queryData(this.dataSourceName,"", this.pageNo, this.pageSize)
     },
     handleSizeChange(val){
        this.pageSize=val
@@ -117,7 +117,7 @@ export default {
            this.pageNo++
          }
        }
-       this.queryData(this.dataSourceName, this.pageNo, this.pageSize)
+       this.queryData(this.dataSourceName,"", this.pageNo, this.pageSize)
     },
     handleOnTest(DataSourceID){
       test(DataSourceID,"","","","").then(response =>{
