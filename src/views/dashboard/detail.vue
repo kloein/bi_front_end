@@ -36,15 +36,16 @@
         <el-container style="height: 280px;background-color:burlywood;">
             <el-header style="height: 40px;background-color: #FFF;padding: 0%;">
                 <el-button-group style="padding: 0%; width: 200px; display: flex; justify-content: space-between;">  
-                  <el-button type="primary" plain style="width: 180px;">指标管理</el-button>
+                  <el-button type="primary" plain style="width: 180px;">维度管理</el-button>
                   <el-button type="primary" plain style="width: 20px;display: flex;align-items: center;justify-content: center;" icon="el-icon-plus" @click="dimensionDialogVisible = true"></el-button>
                 </el-button-group>
             </el-header>  
             <el-main style="background-color: #FFF;padding: 0%;">
               <el-table
               class="tableBox"
-                :data="indexList"
+                :data="dimensionList"
                 :show-header="false"
+                :loading="dimensionListLoading"
                 height="100%"
                 border
                 style="width: 100%"
@@ -56,22 +57,27 @@
                     <el-button class="full-width-button" icon="el-icon-more" style="margin-right:-9px; padding-top: 10%;padding-bottom: 10%;padding-left: 11px;padding-right: 13px; height: 30px;" align="left" size="small" ></el-button>
                       <el-dropdown-menu slot="dropdown">
                         <el-dropdown-item>
-                          <el-button type="">
-                            修改指标
+                          <el-button @click="updateDimension(scope.row.dimensionID)">
+                            修改维度
                           </el-button>
                         </el-dropdown-item>
                         <el-dropdown-item>
-                          <el-button type="">
-                            删除指标
+                          <el-button @click="handleDeleteDimension(scope.row.dimensionID)">
+                            删除维度
+                          </el-button>
+                        </el-dropdown-item>
+                        <el-dropdown-item>
+                          <el-button @click="handleDimensionShow(scope.row.dimensionID)">
+                            加入仪表
                           </el-button>
                         </el-dropdown-item>
                       </el-dropdown-menu>
                     </el-dropdown>
                   </template>
                 </el-table-column>
-                <el-table-column label="维度名称" width="160px">
+                <el-table-column label="维度名称" width="159px">
                     <template slot-scope="scope">
-                      <span >{{ scope.row.indexName }}</span>
+                      <span >{{ scope.row.dimensionName }}</span>
                     </template>
                 </el-table-column>
               </el-table>
@@ -81,21 +87,44 @@
               title="新增维度"
               :visible.sync="dimensionDialogVisible"
               width="30%"
-              :before-close="handleClose">
+              >
               <el-form :model="createDimensionForm">                             
-                <el-form-item label="维度名称" :label-width="formLabelWidth">
+                <el-form-item label="维度名称">
                   <el-input v-model="createDimensionForm.dimensionName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="表达式" :label-width="formLabelWidth">
+                <el-form-item label="表达式">
                   <el-input v-model="createDimensionForm.dimensionExpression" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="注释" :label-width="formLabelWidth">
+                <el-form-item label="注释">
                   <el-input v-model="createDimensionForm.dimensionComment" autocomplete="off"></el-input>
                 </el-form-item>
               </el-form>
               <span slot="footer" class="dialog-footer">
                 <el-button @click="dimensionDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="dimensionDialogVisible = false">确认</el-button>
+                <el-button type="primary" @click="handleCreateDimension">确认</el-button>
+              </span>
+            </el-dialog>
+
+            <!-- 修改维度弹窗 -->
+            <el-dialog
+              title="修改维度"
+              :visible.sync="dimensionUpdateDialogVisible"
+              width="30%"
+              >
+              <el-form :model="dimensionUpdateDetail">                             
+                <el-form-item label="维度名称">
+                  <el-input v-model="dimensionUpdateDetail.dimensionName" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="表达式">
+                  <el-input v-model="dimensionUpdateDetail.expression" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="注释">
+                  <el-input v-model="dimensionUpdateDetail.comment" autocomplete="off"></el-input>
+                </el-form-item>
+              </el-form>
+              <span slot="footer" class="dialog-footer">
+                <el-button @click="dimensionUpdateDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handleUpdateDimension">确认</el-button>
               </span>
             </el-dialog>
 
@@ -106,7 +135,7 @@
             <el-header style="height: 40px;background-color: #FFF;padding: 0%;">
               <el-button-group style="padding: 0%; width: 200px; display: flex; justify-content: space-between;"> 
                 <el-button type="primary" plain style="width: 180px;">指标管理</el-button>
-                <el-button type="primary" plain style="width: 20px;display: flex;align-items: center;justify-content: center;" icon="el-icon-plus"></el-button>
+                <el-button type="primary" plain style="width: 20px;display: flex;align-items: center;justify-content: center;" icon="el-icon-plus" @click="indexDialogVisible = true"></el-button>
               </el-button-group>
             </el-header>  
             <el-main style="background-color: #FFF;padding: 0%;">
@@ -114,12 +143,34 @@
               class="tableBox"
                 :data="indexList"
                 :show-header="false"
+                border
                 height="100%"
                 style="width: 100%"
                 :row-style="{height: '20px'}"
                 >
                 <el-table-column label="详情按钮" width="40px" align="left" style="padding: 0;">
-                   <el-button class="full-width-button" icon="el-icon-more" style="margin-right:-9px; padding-top: 10%;padding-bottom: 10%;padding-left: 65%;padding-right: 65%; height: 30px;" align="left" size="small" ></el-button>
+                    <template slot-scope="scope" >
+                      <el-dropdown  >
+                        <el-button class="full-width-button" icon="el-icon-more" style="margin-right:-9px; padding-top: 10%;padding-bottom: 10%;padding-left: 11px;padding-right: 13px; height: 30px;" align="left" size="small" ></el-button>
+                          <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item>
+                              <el-button @click="updateIndex(scope.row.indexID)">
+                                修改指标
+                              </el-button>
+                            </el-dropdown-item>
+                            <el-dropdown-item>
+                              <el-button @click="handleDeleteIndex(scope.row.indexID)">
+                                删除指标
+                              </el-button>
+                            </el-dropdown-item>
+                            <el-dropdown-item>
+                              <el-button @click="handleIndexShow(scope.row.indexID)">
+                                加入仪表
+                              </el-button>
+                            </el-dropdown-item>
+                          </el-dropdown-menu>
+                        </el-dropdown>
+                      </template>
                 </el-table-column>
                 <el-table-column label="指标名称" width="160px">
                     <template slot-scope="scope">
@@ -129,22 +180,69 @@
               </el-table>
             </el-main>
         </el-container>
+
+         <!-- 添加指标弹窗 -->
+         <el-dialog
+              title="新增指标"
+              :visible.sync="indexDialogVisible"
+              width="30%"
+              >
+              <el-form :model="createIndexForm">                             
+                <el-form-item label="指标名称">
+                  <el-input v-model="createIndexForm.indexName" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="表达式">
+                  <el-input v-model="createIndexForm.indexExpression" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="注释">
+                  <el-input v-model="createIndexForm.indexComment" autocomplete="off"></el-input>
+                </el-form-item>
+              </el-form>
+              <span slot="footer" class="dialog-footer">
+                <el-button @click="indexDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handleCreateIndex">确认</el-button>
+              </span>
+            </el-dialog>
+
+            <!-- 修改指标弹窗 -->
+            <el-dialog
+              title="修改指标"
+              :visible.sync="indexUpdateDialogVisible"
+              width="30%"
+              >
+              <el-form :model="indexUpdateDetail">                             
+                <el-form-item label="指标名称">
+                  <el-input v-model="indexUpdateDetail.indexName" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="表达式">
+                  <el-input v-model="indexUpdateDetail.expression" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="注释">
+                  <el-input v-model="indexUpdateDetail.comment" autocomplete="off"></el-input>
+                </el-form-item>
+              </el-form>
+              <span slot="footer" class="dialog-footer">
+                <el-button @click="indexUpdateDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handleUpdateIndex">确认</el-button>
+              </span>
+            </el-dialog>
+
       </el-aside>
       <!-- 图表指标维度区 -->
       <el-container>
         <el-header style="height: 31px;padding-left: 0%;" class="bordered-container">
           <el-button type="primary" plain style="height:30px;text-align: center;padding-top: 0%;padding-bottom: 0%;margin-right: 10px;margin-left: 0px;">维度</el-button>
-          <el-button-group v-for="(item,index) in indexList" :key="index" style="margin-right: 5px;margin-top: -2px;">
-            <el-button type="primary" plain style="height:30px;text-align: center;padding-top: 0%;padding-bottom: 0%">{{item.indexName}}</el-button>
-            <el-button plain style="height:30px;text-align: center;padding: 0%;padding-bottom: 0%;width: 22px;font-size: 20px;" icon="el-icon-close" ></el-button>
+          <el-button-group v-for="(item,index) in showDimensionList" :key="index" style="margin-right: 5px;margin-top: -2px;">
+            <el-button type="primary" plain style="height:30px;text-align: center;padding-top: 0%;padding-bottom: 0%">{{item.dimensionName}}</el-button>
+            <el-button plain style="height:30px;text-align: center;padding: 0%;padding-bottom: 0%;width: 22px;font-size: 20px;" icon="el-icon-close" @click="showDimensionList.splice(index,1)"></el-button>
           </el-button-group>
         </el-header>
 
         <el-header style="height: 31px;padding-left: 0%;" class="bordered-container">
           <el-button type="primary" plain style="height:30px;text-align: center;padding-top: 0%;padding-bottom: 0%;margin-right: 10px;margin-left: 0px;">指标</el-button>
-          <el-button-group v-for="(item,index) in indexList" :key="index" style="margin-right: 5px;margin-top: -2px;">
+          <el-button-group v-for="(item,index) in showIndexList" :key="index" style="margin-right: 5px;margin-top: -2px;">
             <el-button type="primary" plain style="height:30px;text-align: center;padding-top: 0%;padding-bottom: 0%">{{item.indexName}}</el-button>
-            <el-button plain style="height:30px;text-align: center;padding: 0%;padding-bottom: 0%;width: 22px;font-size: 20px;" icon="el-icon-close" ></el-button>
+            <el-button plain style="height:30px;text-align: center;padding: 0%;padding-bottom: 0%;width: 22px;font-size: 20px;" icon="el-icon-close" @click="showIndexList.splice(index,1)"></el-button>
           </el-button-group>
         </el-header>
         <!-- 制图区域 -->
@@ -158,41 +256,40 @@
 
 <script>
 import * as echarts from 'echarts';
-import {createIndex,deleteIndex,updateIndex,queryIndex} from  '@/api/index'
-import {createDimension,deleteDimension,updateDimension,queryDimension} from  '@/api/dimension'
+import {createIndex,deleteIndex,updateIndex,queryIndex} from  '@/api/index.js'
+import {createDimension,deleteDimension,updateDimension,queryDimension} from '@/api/dimension.js'
 
 export default {
   data(){
     return {
+      // 基础信息
       dataSourceName:"测试数据源名称",
       dataSourceID:this.$route.query.dataSourceID,
       dataSetName:"测试数据集名称",
-      dataSetID:this.$route.query.dashSetID,
-
+      dataSetID:this.$route.query.dataSetID,
+      // 展示信息
+      showDimensionList:[],
+      showIndexList:[],
+      // 维度管理
+      dimensionListLoading:true,
+      dimensionList:null,
       dimensionDialogVisible:false,
-      createDimensionForm:{
-        dimensionName:"",
-        dimensionExpression:"",
-        dimensionComment:"",
-      },
 
-      indexList:[{
-        indexName:"指标一"
-      },{
-        indexName:"指标二"
-      },{
-        indexName:"指标二"
-      },{
-        indexName:"指标二"
-      },{
-        indexName:"指标二"
-      },{
-        indexName:"指标二"
-      },{
-        indexName:"指标二"
-      },{
-        indexName:"指标二"
-      }],
+      dimensionUpdateDialogVisible:false,
+      dimensionUpdateDetail:{},
+
+      createDimensionForm:{},
+
+      // 指标管理
+      indexListLoading:true,
+      indexList:null,
+      indexDialogVisible:false,
+
+      indexUpdateDialogVisible:false,
+      indexUpdateDetail:{},
+
+      createIndexForm:{},
+
       dashboardType:"",
       dashboardTypes: [{
           value: 'Line',
@@ -239,10 +336,198 @@ export default {
       myChart.setOption(option);
   },
   created(){
-
+    this.loadIndex
+    this.loadDimension()
+    this.loadIndex()
   },
   methods:{
-    
+    loadDimension(){
+      this.dimensionListLoading=true
+      queryDimension(this.dataSourceID, this.dataSetID).then(response=>{
+        this.dimensionList=response.dimensionInfos
+        this.dimensionListLoading=false
+      })
+    },
+    loadIndex(){
+      this.indexListLoading=true
+      queryIndex(this.dataSourceID,this.dataSetID).then(response=>{
+        this.indexList=response.indexInfos
+        this.indexListLoading=false
+      })
+    },
+    handleCreateDimension(){
+      this.$message({
+                message: '维度添加中',
+                type: 'success'
+              })
+      createDimension(this.dataSourceID, this.dataSetID,this.createDimensionForm.dimensionName,this.createDimensionForm.dimensionExpression,this.createDimensionForm.dimensionComment).then(response=>{
+          if(response.retCode==20000){
+            this.dimensionDialogVisible=false
+            this.$message({
+                message: '维度添加成功',
+                type: 'success'
+              })
+            // 重置表单
+            this.createDimensionForm={}
+            // 刷新维度列表
+            this.loadDimension()
+          }else{
+            this.$message({
+                message: '维度添加失败',
+                type: 'warning'
+              })
+          }
+      })
+    },
+    handleCreateIndex(){
+      this.$message({
+                message: '指标添加中',
+                type: 'success'
+              })
+      console.log(JSON.stringify(this.createIndexForm))
+      createIndex(this.dataSourceID, this.dataSetID,this.createIndexForm.indexName,this.createIndexForm.indexExpression,this.createIndexForm.indexComment).then(response=>{
+          if(response.retCode==20000){
+            this.indexDialogVisible=false
+            this.$message({
+                message: '指标添加成功',
+                type: 'success'
+              })
+            // 重置表单
+            this.createIndexForm={}
+            // 刷新维度列表
+            this.loadIndex()
+          }else{
+            this.$message({
+                message: '指标添加失败',
+                type: 'warning'
+              })
+          }
+      })
+    },
+    handleDeleteDimension(dimensionID){
+      this.$confirm('此操作将永久删除该维度, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          deleteDimension(dimensionID).then(response =>{
+            if(response.retCode==20000){
+                this.dimensionDialogVisible=false
+                this.$message({
+                    message: '维度删除成功',
+                    type: 'success'
+                  })
+                // 刷新维度列表
+                this.loadDimension()
+              }else{
+                this.$message({
+                    message: '维度删除失败',
+                      type: 'warning'
+                    })
+                }
+            })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });          
+        });
+    },
+    handleDeleteIndex(indexID){
+      this.$confirm('此操作将永久删除该指标, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          deleteIndex(indexID).then(response =>{
+            if(response.retCode==20000){
+                this.indexDialogVisible=false
+                this.$message({
+                    message: '指标删除成功',
+                    type: 'success'
+                  })
+                // 刷新维度列表
+                this.loadIndex()
+              }else{
+                this.$message({
+                    message: '指标删除失败',
+                    type: 'warning'
+                  })
+              }
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });          
+        });
+    },
+    updateIndex(indexID){
+      this.indexList.forEach(element => {
+        if(element.indexID==indexID){
+          this.indexUpdateDetail=element
+        }
+      });
+      this.indexUpdateDialogVisible=true
+    },
+    handleUpdateDimension(){
+      this.$message({
+                message: '维度更新中',
+                type: 'success'
+              })
+      updateDimension(this.dimensionUpdateDetail.dimensionID,this.dimensionUpdateDetail.dimensionName,this.dimensionUpdateDetail.expression,this.dimensionUpdateDetail.comment).then(response =>{
+        if(response.retCode==20000){
+            this.dimensionUpdateDialogVisible=false
+            this.$message({
+                message: '维度更新成功',
+                type: 'success'
+              })
+            // 刷新维度列表
+            this.loadDimension()
+          }else{
+            this.$message({
+                message: '维度更新失败',
+                type: 'warning'
+              })
+          }
+      })
+    },
+    handleUpdateIndex(){
+      this.$message({
+                message: '指标更新中',
+                type: 'success'
+              })
+      updateIndex(this.indexUpdateDetail.indexID,this.indexUpdateDetail.dimensionName,this.indexUpdateDetail.expression,this.indexUpdateDetail.comment).then(response =>{
+        if(response.retCode==20000){
+            this.indexUpdateDialogVisible=false
+            this.$message({
+                message: '指标更新成功',
+                type: 'success'
+              })
+            // 刷新指标列表
+            this.loadIndex()
+          }else{
+            this.$message({
+                message: '指标更新失败',
+                type: 'warning'
+              })
+          }
+      })
+    },
+    handleDimensionShow(dimensionID){
+      this.dimensionList.forEach(element => {
+        if(element.dimensionID==dimensionID){
+          this.showDimensionList.push(element)
+        }
+      });
+    },
+    handleIndexShow(indexID){
+      this.indexList.forEach(element => {
+        if(element.indexID==indexID){
+          this.showIndexList.push(element)
+        }
+      });
+    }
   }
 }
 </script>
