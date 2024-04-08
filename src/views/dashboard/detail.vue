@@ -591,7 +591,7 @@ export default {
                 type: 'success'
               })
             // 跳回图表查询
-            var url = "/dashboards/dashboardQuery?dataSourceID="+this.dataSourceID+"&dataSetID="+this.dataSetID
+            var url = "/dashboards/dashboardQuery?dataSourceID="+this.dataSourceID+"&dataSetID"+this.dataSetID
             this.$router.replace(url)
           }else{
             this.$message({
