@@ -74,7 +74,7 @@
       </el-table-column>
       <el-table-column label="图表名称"  width="100" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.dashBoardName }}</span>
+          <span>{{ scope.row.dashboardName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间"  width="150" align="center">
@@ -182,7 +182,7 @@
 </template>
 
 <script>
-import { query,create } from '@/api/dashboard'
+import { queryDashboard,createDashboard } from '@/api/dashboard'
 import { query as queryDataSourceApi } from '@/api/data_source' 
 import { query as queryDataSetApi} from '@/api/data_set'
 
@@ -223,7 +223,7 @@ export default {
     // 基础查询方法
     queryData(DashboardName="", DataSourceID="",DataSetID="",DashboardID="",PageNo, PageSize){
       this.listLoading = true
-      query(DashboardName, DataSourceID,DataSetID,DashboardID,PageNo, PageSize).then(response =>{
+      queryDashboard(DashboardName, DataSourceID,DataSetID,DashboardID,PageNo, PageSize).then(response =>{
         this.list = response.dashboardInfos
         this.pageNo=response.pageNo
         this.pageSize=response.pageSize
@@ -295,7 +295,7 @@ export default {
                 message: '图表创建中',
                 type: 'success'
             })
-      create(this.createDashboardForm.dashboardName,this.dataSourceID,this.dataSetID,this.createDashboardForm.comment).then(response =>{
+      createDashboard(this.createDashboardForm.dashboardName,this.dataSourceID,this.dataSetID,this.createDashboardForm.comment).then(response =>{
         if(response.retCode==20000){
             this.createDashboardDialogVisible=false
             // 根据dataSourceID和dataSetID找出对应的名称

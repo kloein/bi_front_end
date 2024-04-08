@@ -25,9 +25,27 @@
           </el-select>
         </el-col>
         <el-col :span="2" offset="0" >
-          <el-button plain type="primary" >保存</el-button>
+          <el-button plain type="primary" @click="updateDashboardDialogVisible = true">保存</el-button>
         </el-col>
       </el-row>
+      <el-dialog
+        title="保存图表"
+        :visible.sync="updateDashboardDialogVisible"
+        width="30%"
+        >
+        <el-form :model="updateDashboardForm">                             
+          <el-form-item label="图表名称">
+            <el-input v-model="updateDashboardForm.dashboardName" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="注释">
+            <el-input v-model="updateDashboardForm.comment" autocomplete="off"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="updateDashboardDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleUpdateDashboard">确认</el-button>
+        </span>
+      </el-dialog>
     </el-header>
     <!-- 指标维度管理区域 -->
     <!-- 维度 -->
@@ -256,13 +274,21 @@
 
 <script>
 import * as echarts from 'echarts';
+import { Loading } from 'element-ui';
 import {createIndex,deleteIndex,updateIndex,queryIndex} from  '@/api/index.js'
 import {createDimension,deleteDimension,updateDimension,queryDimension} from '@/api/dimension.js'
+import {queryDashboard,createDashboard,updateDashboard,detailDashboard,executeQueryDashboard} from '@/api/dashboard.js'
 
 export default {
   data(){
     return {
+      updateDashboardForm:{
+        dashboardName:"",
+        comment:"",
+      },
+      updateDashboardDialogVisible:false,
       // 基础信息
+      dashboardName:"",
       dashboardID:this.$route.query.dashboardID,
       dataSourceName:this.$route.query.dataSourceName,
       dataSourceID:this.$route.query.dataSourceID,
@@ -291,7 +317,7 @@ export default {
 
       createIndexForm:{},
 
-      dashboardType:"",
+      dashboardType:"Line",
       dashboardTypes: [{
           value: 'Line',
           label: '折线图'
@@ -302,7 +328,7 @@ export default {
           value: 'Pie',
           label: '饼状图'
         }],
-        value: ''
+        loadInstance:Loading.service({ fullscreen: true }),
     }
   },
   mounted() {
@@ -337,11 +363,31 @@ export default {
       myChart.setOption(option);
   },
   created(){
-    this.loadIndex
     this.loadDimension()
     this.loadIndex()
+    this.loadDashboardDetail()
   },
   methods:{
+    // 仪表
+    loadDashboardDetail(){
+      detailDashboard(this.dashboardID).then(response =>{
+          // this.dashboardName=response.dashboardName
+          // this.dataSourceName=response.dataSourceName
+          // this.dataSetName=response.dataSetName
+
+          this.updateDashboardForm.dashboardName=response.dashboardName
+          this.updateDashboardForm.comment=response.comment
+
+          this.showDimensionList=response.dimensionInfos || []
+          this.showIndexList=response.indexInfos || []
+
+          this.dashboardType=response.dashboardType
+
+          this.loadInstance.close()
+      })
+    },
+
+    // 维度与指标
     loadDimension(){
       this.dimensionListLoading=true
       queryDimension(this.dataSourceID, this.dataSetID).then(response=>{
@@ -527,7 +573,34 @@ export default {
           this.showIndexList.push(element)
         }
       });
-    }
+    },
+    handleUpdateDashboard(){
+      var indexIDList=[]
+      var dimensionIDList=[]
+      this.showIndexList.forEach(element =>{
+        indexIDList.push(element.indexID)
+      })
+      this.showDimensionList.forEach(element =>{
+        dimensionIDList.push(element.dimensionID)
+      })
+      updateDashboard(this.updateDashboardForm.dashboardName,this.dashboardID,this.dataSourceID,this.dataSetID,this.dashboardType,dimensionIDList,indexIDList,this.updateDashboardForm.comment).then(response=>{
+        if(response.retCode==20000){
+            this.indexUpdateDialogVisible=false
+            this.$message({
+                message: '图表更新成功',
+                type: 'success'
+              })
+            // 跳回图表查询
+            var url = "/dashboards/dashboardQuery?dataSourceID="+this.dataSourceID+"&dataSetID="+this.dataSetID
+            this.$router.replace(url)
+          }else{
+            this.$message({
+                message: '图表更新失败',
+                type: 'warning'
+              })
+          }
+      })
+    },
   }
 }
 </script>

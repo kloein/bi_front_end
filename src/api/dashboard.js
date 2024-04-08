@@ -1,6 +1,6 @@
 import request from '@/utils/request_bi'
 
-export function query(DashboardName, DataSourceID,DataSetID,DashboardID,PageNo, PageSize) {
+export function queryDashboard(DashboardName, DataSourceID,DataSetID,DashboardID,PageNo, PageSize) {
   return request({
     url: '/dashboard/query',
     method: 'post',
@@ -15,7 +15,7 @@ export function query(DashboardName, DataSourceID,DataSetID,DashboardID,PageNo, 
   })
 }
 
-export function create(DashboardName, DataSourceID,DataSetID,Comment) {
+export function createDashboard(DashboardName, DataSourceID,DataSetID,Comment) {
   return request({
     url: '/dashboard/create',
     method: 'post',
@@ -28,7 +28,7 @@ export function create(DashboardName, DataSourceID,DataSetID,Comment) {
   })
 }
 
-export function update(DashboardName, DashboardID,DataSourceID,DataSetID,DashboardType,DashboardDimensions,DashboardIndexes,Comment) {
+export function updateDashboard(DashboardName, DashboardID,DataSourceID,DataSetID,DashboardType,DashboardDimensions,DashboardIndexes,Comment) {
   return request({
     url: '/dashboard/update',
     method: 'post',
@@ -45,7 +45,7 @@ export function update(DashboardName, DashboardID,DataSourceID,DataSetID,Dashboa
   })
 }
 
-export function detail(DashboardID) {
+export function detailDashboard(DashboardID) {
   return request({
     url: '/dashboard/query/detail',
     method: 'post',
@@ -55,7 +55,7 @@ export function detail(DashboardID) {
   })
 }
 
-export function executeQuery(DataSourceID,DataSetID,DashboardID,DimensionIDs,IndexIDs,FilterIDs) {
+export function executeQueryDashboard(DataSourceID,DataSetID,DashboardID,DimensionIDs,IndexIDs,FilterIDs) {
   return request({
     url: '/dashboard/executeQuery',
     method: 'post',
