@@ -106,7 +106,7 @@ export const constantRoutes = [
     path: '/dashboards',
     component: Layout,
     redirect: '/dashboards/dashboardQuery/',
-    meta: { title: '仪表盘管理', icon: 'el-icon-s-promotion' },
+    meta: { title: '仪表盘管理', icon: 'el-icon-s-marketing' },
     children: [
       {
         path: 'dashboardQuery',
@@ -118,7 +118,7 @@ export const constantRoutes = [
         path: 'dashboardDetail',
         name: 'dashboardDetail',
         component: () => import('@/views/dashboard/detail'),
-        meta: { title: '仪表盘查询', icon: 'el-icon-search' }
+        //meta: { title: '仪表盘查询', icon: 'el-icon-search' }
       }
     ]
   },

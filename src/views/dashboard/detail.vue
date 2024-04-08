@@ -2,7 +2,7 @@
   <el-container>
     <el-header style="height: 40px;padding-left: 0%" >   
       <el-row :gutter="0">
-        <el-col :span="5">
+        <el-col :span="7">
           <el-button-group>
             <el-button  type="primary" plain>数据源名称</el-button>
             <el-button plain>{{dataSourceName}}</el-button>
@@ -14,7 +14,7 @@
             <el-button plain>{{dataSetName}}</el-button>
           </el-button-group>
         </el-col>
-        <el-col :span="4" offset="8">
+        <el-col :span="4" offset="6">
           <el-select v-model="dashboardType" placeholder="请图表类型">
             <el-option
               v-for="item in dashboardTypes"
@@ -263,9 +263,10 @@ export default {
   data(){
     return {
       // 基础信息
-      dataSourceName:"测试数据源名称",
+      dashboardID:this.$route.query.dashboardID,
+      dataSourceName:this.$route.query.dataSourceName,
       dataSourceID:this.$route.query.dataSourceID,
-      dataSetName:"测试数据集名称",
+      dataSetName:this.$route.query.dataSetName,
       dataSetID:this.$route.query.dataSetID,
       // 展示信息
       showDimensionList:[],
@@ -384,7 +385,6 @@ export default {
                 message: '指标添加中',
                 type: 'success'
               })
-      console.log(JSON.stringify(this.createIndexForm))
       createIndex(this.dataSourceID, this.dataSetID,this.createIndexForm.indexName,this.createIndexForm.indexExpression,this.createIndexForm.indexComment).then(response=>{
           if(response.retCode==20000){
             this.indexDialogVisible=false

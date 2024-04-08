@@ -50,7 +50,7 @@
         </el-col>
 
         <el-col :span="2" :offset="5"> 
-          <el-button type="primary" @click= "handleQuery">创建仪表</el-button>
+          <el-button type="primary" @click= "createDashboardDialogVisible = true">创建仪表</el-button>
         </el-col>
     </el-row>
   <el-container>
@@ -100,10 +100,68 @@
       </el-table-column>
       <el-table-column label="仪表详情"  width="100" align="center">
         <template slot-scope="scope">
-          <el-button  @click="handleJumpToDatasource(scope.row)">详情</el-button>
+          <el-button  @click="handleJumpToDashboard(scope.row)">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <!-- 创建图表弹窗 -->
+    <el-dialog
+        title="创建图表"
+        :visible.sync="createDashboardDialogVisible"
+        width="30%"
+        >
+        <el-form :model="createDashboardForm">                             
+          <el-form-item label="仪表名称">
+            <el-input v-model="createDashboardForm.dashboardName" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="数据源">
+              <el-select
+              style="width: 270px;"
+              v-model="dataSourceID"
+              filterable
+              remote
+              reserve-keyword
+              placeholder="请输入数据源名称"
+              @change="handleDataSourceChange"
+              :remote-method="remoteQueryDataSource"
+              :loading="loadingDataSource">
+              <el-option
+                v-for="item in dataSourceList"
+                :key="item.dataSourceID"
+                :label="item.dataSourceName"
+                :value="item.dataSourceID">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="数据集">
+            <el-select
+              style="width: 270px;"
+              v-model="dataSetID"
+              :disabled ="dataSourceID==null"
+              filterable
+              remote
+              reserve-keyword
+              placeholder="请输入数据集名称"
+              @change="handleDataSetChange" 
+              :remote-method="remoteQueryDataSet"
+              :loading="loadingDataSet">
+              <el-option
+                v-for="item in dataSetList"
+                :key="item.dataSetID"
+                :label="item.dataSetName"
+                :value="item.dataSetID">
+              </el-option>
+        </el-select>
+          </el-form-item>
+          <el-form-item label="注释">
+            <el-input v-model="createDashboardForm.comment" autocomplete="off"></el-input>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="createDashboardDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleCreateDashboard">确认</el-button>
+        </span>
+      </el-dialog>
     </el-main>
     <el-footer>
       <div class="block" align="right">
@@ -124,7 +182,7 @@
 </template>
 
 <script>
-import { query } from '@/api/dashboard'
+import { query,create } from '@/api/dashboard'
 import { query as queryDataSourceApi } from '@/api/data_source' 
 import { query as queryDataSetApi} from '@/api/data_set'
 
@@ -147,12 +205,15 @@ export default {
       pageNo:1,
       pageSize:5,
       total:0,
+
+      createDashboardForm:{},
+      createDashboardDialogVisible:false,
     }
   },
   created() {
     // 先查出数据源
     this.queryDataSource("",this.dataSourceID)
-    // 如果有数据集ID，也查出来
+    // 如果有数据集ID，触发数据集列表查询
     if(this.dataSetID!=null){
       this.queryDataSet("",this.dataSourceID)
     }
@@ -227,6 +288,42 @@ export default {
     },
     handleJumpToDataSet(row){
       var url = "/dataSet/dataSetQuery?dataSourceID="+row.dataSourceID+"&dataSetID="+row.dataSetID
+      this.$router.replace(url)
+    },
+    handleCreateDashboard(){
+      this.$message({
+                message: '仪表创建中',
+                type: 'success'
+            })
+      create(this.createDashboardForm.dashboardName,this.dataSourceID,this.dataSetID,this.createDashboardForm.comment).then(response =>{
+        if(response.retCode==20000){
+            this.createDashboardDialogVisible=false
+            // 根据dataSourceID和dataSetID找出对应的名称
+            var dataSourceName=""
+            var dataSetName=""
+            this.dataSourceList.forEach(element => {
+              if(element.dataSourceID==this.dataSourceID){
+                dataSourceName=element.dataSourceName
+              }
+            });
+            this.dataSetList.forEach(element => {
+              if(element.dataSetID==this.dataSetID){
+                dataSetName=element.dataSetName
+              }
+            });
+            var url = "/dashboards/dashboardDetail?dataSourceID="+this.dataSourceID+"&dataSourceName="+dataSourceName+"&dataSetID="+this.dataSetID+"&dataSetName="+dataSetName+"&dashboardID="+response.dashboardID
+            console.log(JSON.stringify(url))
+            this.$router.replace(url)
+          }else{
+            this.$message({
+                message: '仪表创建失败',
+                type: 'warning'
+              })
+          }
+      })
+    },
+    handleJumpToDashboard(row){
+      var url = "/dashboards/dashboardDetail?dataSourceID="+row.dataSourceID+"&dataSourceName="+row.dataSourceName+"&dataSetID="+row.dataSetID+"&dataSetName="+row.dataSetName+"&dashboardID="+row.dashboardID
       this.$router.replace(url)
     }
   }
