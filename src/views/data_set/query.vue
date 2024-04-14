@@ -60,7 +60,7 @@
       <el-table-column label="血缘关系"  width="200" align="center">
         <template slot-scope="scope">
           <el-button  @click="handleJumpToDatasource(scope.row)">数据源</el-button>
-          <el-button  @click="handleJumpToDashboard(scope.row)">仪表盘</el-button>
+          <el-button  @click="handleJumpToDashboard(scope.row)">图表</el-button>
         </template>
       </el-table-column>
       <el-table-column label="字段详情"  width="100" align="center">
