@@ -2,20 +2,26 @@
   <el-container>
     <el-header style="height: 40px;padding-left: 0%" >   
       <el-row :gutter="0">
-        <el-col :span="7">
+        <el-col :span="8">
           <el-button-group>
             <el-button  type="primary" plain>数据源名称</el-button>
             <el-button plain>{{dataSourceName}}</el-button>
           </el-button-group>
         </el-col>
-        <el-col :span="5">
+        <el-col :span="5" offset="0">
           <el-button-group>
             <el-button  type="primary" plain>数据集名称</el-button>
             <el-button plain>{{dataSetName}}</el-button>
           </el-button-group>
         </el-col>
-        <el-col :span="4" offset="6">
-          <el-select v-model="dashboardType" placeholder="请图表类型">
+        <el-col :span="4" offset="0">
+          <el-button-group>
+            <el-button plain type="primary">耗时</el-button>
+            <el-button plain type="plain" style="width: 100px;">{{ this.costTime }}</el-button>
+          </el-button-group>
+        </el-col>
+        <el-col :span="4" offset="0">
+          <el-select v-model="dashboardType" placeholder="请图表类型" @change="handleDashboardTypeChange">
             <el-option
               v-for="item in dashboardTypes"
               :key="item.value"
@@ -24,8 +30,11 @@
             </el-option>
           </el-select>
         </el-col>
-        <el-col :span="2" offset="0" >
-          <el-button plain type="primary" @click="updateDashboardDialogVisible = true">保存</el-button>
+        <el-col :span="3" offset="0" >
+          <el-button-group>
+            <el-button plain type="primary" @click="executeQuery">查询 </el-button>
+            <el-button plain type="primary" @click="updateDashboardDialogVisible = true">保存</el-button>
+          </el-button-group>
         </el-col>
       </el-row>
       <el-dialog
@@ -264,8 +273,30 @@
           </el-button-group>
         </el-header>
         <!-- 制图区域 -->
-        <el-main id="paint" style="height: 400px;background-color:#FFF;">Main3</el-main>
-
+        <el-main style="height: 450px;background-color:#FFF;">
+        <div v-if="dashboardType=='Table'" style="height: 450px;">
+          <el-table :data="rows" 
+          style="width: 100%;height: 450px;" 
+           fit 
+           element-loading-text="加载中"
+           v-loading="dashboardLoading"
+           empty-text="无数据，请添加指标并点击查询">
+            <el-table-column v-for="(dimensionName,index) in dimensionNames" :key="index"  
+            :label="dimensionName" align="center">
+            <template slot-scope="scope">
+              {{ scope.row.dimensionValues[index] }}
+            </template> 
+            </el-table-column>
+            <el-table-column v-for="(indexName,index) in indexNames" :key="index"  
+            :label="indexName" align="center">
+            <template slot-scope="scope">
+              {{ scope.row.indexValues[index] }}
+            </template> 
+            </el-table-column>
+          </el-table>
+        </div>
+        <div v-if="dashboardType!='Table'" v-loading="dashboardLoading" id="paint"></div>
+       </el-main>
       </el-container>
     </el-container>
   </el-container>
@@ -277,7 +308,7 @@ import * as echarts from 'echarts';
 import { Loading } from 'element-ui';
 import {createIndex,deleteIndex,updateIndex,queryIndex} from  '@/api/index.js'
 import {createDimension,deleteDimension,updateDimension,queryDimension} from '@/api/dimension.js'
-import {queryDashboard,createDashboard,updateDashboard,detailDashboard,executeQueryDashboard} from '@/api/dashboard.js'
+import {updateDashboard,detailDashboard,executeQueryDashboard} from '@/api/dashboard.js'
 
 export default {
   data(){
@@ -317,51 +348,27 @@ export default {
 
       createIndexForm:{},
 
-      dashboardType:"Line",
+      dashboardType:"Table",
       dashboardTypes: [{
-          value: 'Line',
-          label: '折线图'
+          value: 'Table',
+          label: '表格'
         }, {
           value: 'Bar',
           label: '柱状图'
-        }, {
-          value: 'Pie',
-          label: '饼状图'
         }],
+        // 查询制图信息
+        dimensionNames:[],
+        indexNames:[],
+        rows:[],
+        costTime:"尚未查询",
+        myChart:null,
+
+        dashboardLoading:false,
+        // 加载框
         loadInstance:Loading.service({ fullscreen: true }),
     }
   },
-  mounted() {
-  // 初始化实例对象  echarts.init(dom容器);
-  let myChart = echarts.init(document.getElementById("paint"), null, {
-        width: 1100,
-        height: 455
-      });
-     // 指定图表的配置项和数据
-     var option = {
-        title: {
-          text: 'ECharts 入门示例'
-        },
-        tooltip: {},
-        legend: {
-          data: ['销量']
-        },
-        xAxis: {
-          data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
-        },
-        yAxis: {},
-        series: [
-          {
-            name: '销量',
-            type: 'bar',
-            data: [5, 20, 36, 10, 10, 20]
-          }
-        ]
-      };
-
-      // 使用刚指定的配置项和数据显示图表。
-      myChart.setOption(option);
-  },
+  mounted() {},
   created(){
     this.loadDimension()
     this.loadIndex()
@@ -371,7 +378,7 @@ export default {
     // 仪表
     loadDashboardDetail(){
       detailDashboard(this.dashboardID).then(response =>{
-          // this.dashboardName=response.dashboardName
+          this.dashboardName=response.dashboardName
           // this.dataSourceName=response.dataSourceName
           // this.dataSetName=response.dataSetName
 
@@ -385,6 +392,91 @@ export default {
 
           this.loadInstance.close()
       })
+    },
+
+    executeQuery(){
+      this.dashboardLoading=true
+      var indexIDList=[]
+      var dimensionIDList=[]
+      this.showIndexList.forEach(element =>{
+        indexIDList.push(element.indexID)
+      })
+      this.showDimensionList.forEach(element =>{
+        dimensionIDList.push(element.dimensionID)
+      })
+      executeQueryDashboard(this.dataSourceID,this.dataSetID,this.dashboardID,dimensionIDList,indexIDList).then(response=>{
+          this.rows=response.queryRows
+          this.dimensionNames=response.dimensionNames
+          this.indexNames=response.indexNames
+          this.costTime=response.costTime
+          
+          this.dashboardLoading=false
+          // 如果非表格类型，需要echart制图
+          if(this.dashboardType!='Table'){
+             this.echartPaint()
+          }
+      })
+    },
+
+    handleDashboardTypeChange(){
+      this.myChart.dispose()
+    },
+
+    echartPaint(){
+      // 初始化实例对象  echarts.init(dom容器);
+      this.myChart = echarts.init(document.getElementById("paint"), null, {
+        width: 1100,
+        height: 455
+      });
+
+      var labels=[]
+      var data=[]
+      this.rows.forEach(item=>{
+        labels.push(item.label)
+      })
+      for(var i=0;i<this.indexNames.length;i++){
+        var indexValues=[]
+        this.rows.forEach(item=>{
+          indexValues.push(item.indexValues[i])
+        })
+        data.push({
+          name:this.indexNames[i],
+          type:'bar',
+          data:indexValues,
+        })
+      }
+
+      console.log(JSON.stringify(labels))
+      // 指定图表的配置项和数据
+      var option= {
+        title: {
+          text: this.dashboardName
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        legend: {},
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'value',
+          boundaryGap: [0, 0.01]
+        },
+        yAxis: {
+          type: 'category',
+          data: labels
+        },
+        series: data
+      };
+      // 使用刚指定的配置项和数据显示图表。
+      this.myChart.setOption(option);
     },
 
     // 维度与指标
@@ -600,7 +692,7 @@ export default {
               })
           }
       })
-    },
+    }
   }
 }
 </script>

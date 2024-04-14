@@ -109,7 +109,7 @@ export default {
        this.queryDataSetColumn(this.dataSetName,this.dataSourceID, this.pageNo, this.pageSize)
     },
     handleBack(){
-      var url = "/dataSet/dataSetQuery?dataSourceID="+ this.dataSourceID+"&dataSetName="+this.dataSetName
+      var url = "/dataSet/dataSetQuery?dataSourceID="+ this.dataSourceID
       this.$router.replace(url)
     }
   }

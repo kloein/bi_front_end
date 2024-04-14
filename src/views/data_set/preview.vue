@@ -96,7 +96,7 @@ export default {
        this.preview(this.dataSourceID,this.dataSetID,this.dataSetName, this.pageNo, this.pageSize)
     },
     handleBack(){
-      var url = "/dataSet/dataSetQuery?dataSourceID="+ this.dataSourceID+"&dataSetName="+this.dataSetName
+      var url = "/dataSet/dataSetQuery?dataSourceID="+ this.dataSourceID
       this.$router.replace(url)
     }
   }
