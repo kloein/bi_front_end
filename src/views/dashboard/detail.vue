@@ -429,6 +429,8 @@ export default {
         height: 455
       });
 
+      this.myChart.clear()
+
       var labels=[]
       var data=[]
       this.rows.forEach(item=>{
@@ -446,7 +448,7 @@ export default {
         })
       }
 
-      console.log(JSON.stringify(labels))
+      //console.log(JSON.stringify(labels))
       // 指定图表的配置项和数据
       var option= {
         title: {
@@ -607,6 +609,14 @@ export default {
         }
       });
       this.indexUpdateDialogVisible=true
+    },
+    updateDimension (dimensionID){
+      this.dimensionList.forEach(element => {
+        if(element.dimensionID==dimensionID){
+          this.dimensionUpdateDetail=element
+        }
+      });
+      this.dimensionUpdateDialogVisible=true
     },
     handleUpdateDimension(){
       this.$message({
